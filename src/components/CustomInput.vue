@@ -1,15 +1,27 @@
 <template>
   <v-text-field
-    modal-value="modelValue"
-    @input="$emit('update:modelValue', $event.target.value)"
     :label="label"
+    outlined
+    clearable
+    :modelValue="modelValue"
+    @input="$emit('update:modelValue', $event.target.value)"
+    @keydown.enter="$emit('added')"
   ></v-text-field>
 </template>
 
 <script setup>
-defineProps({
-  modelValue: String,
-  label: String,
+import { defineProps, defineEmits } from 'vue'
+
+const props = defineProps({
+  modelValue: {
+    type: String,
+    default: '',
+  },
+  label: {
+    type: String,
+    default: '',
+  },
 })
-defineEmits(['update:modelValue'])
+
+defineEmits(['update:modelValue', 'added'])
 </script>

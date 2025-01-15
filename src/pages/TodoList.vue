@@ -3,17 +3,17 @@
     <v-row justify="start" class="mb-5">
       <v-col cols="12" md="12" lg="12">
         <h1 class="mb-3">To-Do-List</h1>
-        <v-text-field
+        <CustomInput
           v-model="newTask"
           label="Add a new task"
-          outlined
-          clearable
           class="mb-2"
+          @added="focusInput"
+          ref="inputField"
         />
         <div>
           <v-btn color="blue" @click="addTask" :disabled="!newTask.trim()"
-            >Add Task
-          </v-btn>
+            >Add Task</v-btn
+          >
           <v-btn color="red" @click="toggleCompletedVisibility" class="ml-2">
             {{ showCompleted ? 'Hide' : 'Show' }} Completed Tasks
           </v-btn>
@@ -32,38 +32,14 @@
       <v-col cols="12" md="12" lg="12" class="pl-0 ml-0">
         <v-list two-line>
           <template v-if="tasks.length">
-            <v-list-item
+            <TaskItem
               v-for="(task, index) in filteredTasks"
               :key="index"
               class="align-center"
-            >
-              <v-row align="center" justify="space-between">
-                <v-checkbox
-                  v-model="task.completed"
-                  hide-details
-                  class="ml-1"
-                  color="success"
-                />
-                <v-list-item-content>
-                  <v-list-item-title
-                    :class="{
-                      'text-success': task.completed,
-                    }"
-                  >
-                    {{ task.text }}
-                  </v-list-item-title>
-                </v-list-item-content>
-                <v-btn
-                  icon
-                  color="error"
-                  @click="deleteTask(index)"
-                  aria-label="Delete Task"
-                  class="ma-4"
-                >
-                  <v-icon>mdi-delete</v-icon>
-                </v-btn>
-              </v-row>
-            </v-list-item>
+              :task="task"
+              @remove="deleteTask(index)"
+              @toggle="toggleTask(index)"
+            />
           </template>
 
           <template v-else>
@@ -93,10 +69,13 @@
 
 <script setup>
 import { ref, computed, onBeforeMount, onMounted, onUpdated } from 'vue'
+import CustomInput from '../components/CustomInput.vue'
+import TaskItem from '../components/TaskItem.vue'
 
 const newTask = ref('')
 const tasks = ref([])
 const showCompleted = ref(true)
+const inputField = ref(null)
 
 const snackbar = ref({
   show: false,
@@ -131,6 +110,14 @@ const filteredTasks = computed(() => {
 const showSnackbar = (message) => {
   snackbar.value.message = message
   snackbar.value.show = true
+}
+
+const focusInput = () => {
+  inputField.value?.focus()
+}
+
+const toggleTask = (index) => {
+  tasks.value[index].completed = !tasks.value[index].completed
 }
 
 onBeforeMount(() => {
