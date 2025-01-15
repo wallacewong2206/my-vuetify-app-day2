@@ -10,9 +10,21 @@
           clearable
           class="mb-2"
         />
-        <v-btn color="blue" @click="addTask" :disabled="!newTask.trim()"
-          >Add Task
-        </v-btn>
+        <div>
+          <v-btn color="blue" @click="addTask" :disabled="!newTask.trim()"
+            >Add Task
+          </v-btn>
+          <v-btn color="red" @click="toggleCompletedVisibility" class="ml-2">
+            {{ showCompleted ? 'Hide' : 'Show' }} Completed Tasks
+          </v-btn>
+          <v-snackbar
+            v-model="snackbar.show"
+            :timeout="snackbar.timeout"
+            class="mt-2"
+          >
+            {{ snackbar.message }}
+          </v-snackbar>
+        </div>
       </v-col>
     </v-row>
 
@@ -21,7 +33,7 @@
         <v-list two-line>
           <template v-if="tasks.length">
             <v-list-item
-              v-for="(task, index) in tasks"
+              v-for="(task, index) in filteredTasks"
               :key="index"
               class="align-center"
             >
@@ -35,8 +47,7 @@
                 <v-list-item-content>
                   <v-list-item-title
                     :class="{
-                      'text-decoratiion-line-through text-muted':
-                        task.completed,
+                      'text-success': task.completed,
                     }"
                   >
                     {{ task.text }}
@@ -45,7 +56,7 @@
                 <v-btn
                   icon
                   color="error"
-                  @click="removeTask(index)"
+                  @click="deleteTask(index)"
                   aria-label="Delete Task"
                   class="ma-4"
                 >
@@ -72,7 +83,7 @@
       <v-col cols="12" md="12" lg="12" class="text-center">
         <v-divider class="my-3" />
         <p>
-          Completed Tasks: <strong>{{ completedTasks }}</strong
+          Completed Tasks: <strong>{{ completedTask }}</strong
           >/ {{ tasks.length }}
         </p>
       </v-col>
@@ -81,38 +92,70 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-const tasks = ref([])
+import { ref, computed, onBeforeMount, onMounted, onUpdated } from 'vue'
+
 const newTask = ref('')
+const tasks = ref([])
+const showCompleted = ref(true)
+
+const snackbar = ref({
+  show: false,
+  message: '',
+  timeout: 5000,
+})
 
 const addTask = () => {
-  if (newTask.value.trim()) {
-    tasks.value.push({ text: newTask.value, completed: false })
-    newTask.value = ''
-  }
+  tasks.value.push({ text: newTask.value, completed: false })
+  newTask.value = ''
+  showSnackbar('A new task has been added!')
 }
 
-const removeTask = (index) => {
+const deleteTask = (index) => {
   tasks.value.splice(index, 1)
+  showSnackbar('A task has been deleted!')
 }
 
-const completedTask = computed(
-  () => tasks.value.filter((task) => task.completed).length
-)
+const toggleCompletedVisibility = () => {
+  showCompleted.value = !showCompleted.value
+  showSnackbar(
+    showCompleted.value ? 'Showing completed tasks' : 'Hiding completed tasks'
+  )
+}
+
+const filteredTasks = computed(() => {
+  return showCompleted.value
+    ? tasks.value
+    : tasks.value.filter((task) => !task.completed)
+})
+
+const showSnackbar = (message) => {
+  snackbar.value.message = message
+  snackbar.value.show = true
+}
+
+onBeforeMount(() => {
+  tasks.value = [
+    { text: 'Buy groceries', completed: false },
+    { text: 'Walk the dog', completed: true },
+    { text: 'Read a book', completed: false },
+  ]
+})
+
+onMounted(() => {
+  console.log('The app is fully loaded')
+})
+
+onUpdated(() => {
+  console.log('Tasks have been updated')
+})
+
+const completedTask = computed(() => {
+  return tasks.value.filter((task) => task.completed).length
+})
 </script>
 
 <style scoped>
-.text-decoration-line-through {
-  text-decoration: line-through;
-}
-.text.muted {
-  color: rgba(0, 0, 0, 0.6);
-}
-
-.v-list-item-title {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 500px;
+.text-success {
+  color: green;
 }
 </style>

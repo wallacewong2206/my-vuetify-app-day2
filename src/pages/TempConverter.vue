@@ -6,7 +6,7 @@
       </v-col>
     </v-row>
     <v-row>
-      <v-col cols="12" md="6">
+      <v-col cols="12" sm="6">
         <v-text-field
           v-model="celsius"
           label="Celsius"
@@ -14,7 +14,7 @@
           outlined
         ></v-text-field>
       </v-col>
-      <v-col cols="12" md="6">
+      <v-col cols="12" sm="6">
         <v-text-field
           v-model="fahrenheit"
           label="Fahrenheit"
@@ -25,47 +25,30 @@
     </v-row>
     <v-row>
       <v-col cols="12">
-        <v-alert type="info" icon="$info"
-          >Last converted: {{ lastConversion }}</v-alert
-        >
+        <v-alert v-if="lastConverted" type="info" text>
+          Last converted: {{ lastConverted }}
+        </v-alert>
       </v-col>
     </v-row>
   </v-container>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
-
 const celsius = ref(0)
 const fahrenheit = ref(32)
-const lastConversion = ref('None')
-let conversionOrigin = null
+const lastConverted = ref('')
 
-function isConversionOrigin(origin) {
-  if (conversionOrigin === origin) return false
-  conversionOrigin = origin
-  return true
-}
-
-function convertToFahrenheit(celsiusValue) {
-  return (celsiusValue * 9) / 5 + 32
-}
-
-function convertToCelsius(fahrenheitValue) {
-  return ((fahrenheitValue - 32) * 5) / 9
-}
-
-watch(celsius, (newVal) => {
-  if (isConversionOrigin('celsius')) {
-    fahrenheit.value = convertToFahrenheit(newVal)
-    lastConversion.value = 'Celsius to Fahrenheit'
+watch(celsius, (newValue, oldValue) => {
+  if (newValue !== oldValue) {
+    fahrenheit.value = Number(((newValue * 9) / 5 + 32).toFixed(2))
+    lastConverted.value = 'Celsius to Fahrenheit'
   }
 })
 
-watch(fahrenheit, (newVal) => {
-  if (isConversionOrigin('fahrenheit')) {
-    celsius.value = convertToCelsius(newVal)
-    lastConversion.value = 'Fahrenheit to Celsius'
+watch(fahrenheit, (newValue, oldValue) => {
+  if (newValue !== oldValue) {
+    celsius.value = Number((((newValue - 32) * 5) / 9).toFixed(2))
+    lastConverted.value = 'Fahrenheit to Celsius'
   }
 })
 </script>
