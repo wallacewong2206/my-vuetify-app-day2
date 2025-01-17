@@ -22,11 +22,11 @@
     </Card> -->
 
   <!-- Basic Slots, Card -->
-  <Card>
+  <!-- <Card>
     <template #header><h2>Page Title</h2></template>
     <p #content>Page Content</p>
     <template #actions>Footer</template>
-  </Card>
+  </Card> -->
 
   <!-- Scoped Slots 1 -->
   <!-- <List>
@@ -74,18 +74,45 @@
   <!-- <RenderComponent title="My Title">This is the content</RenderComponent> -->
 
   <!-- Render Function Exercise -->
-  <div class="ma-5">
+  <!-- <div class="ma-5">
     <RenderComponent :level="2" class="text-blue">
       This is an h2 heading
     </RenderComponent>
     <RenderComponent :level="4" class="text-secondary">
       This is an h4 heading
     </RenderComponent>
+  </div> -->
+
+  <!-- Composables -->
+  <div>
+    <v-btn @click="decrement" class="ma-3">-</v-btn>
+    <span>{{ count }}</span>
+    <v-btn @click="increment" class="ma-3">+</v-btn>
   </div>
+
+  <!-- useLocalStorage -->
+  <v-btn
+    class="ma-4"
+    @click="localStorageText = localStorageText === 'Hello' ? 'Bye' : 'Hello'"
+  >
+    Toggle Text ({{ localStorageText }})
+  </v-btn>
+
+  <!-- Customer Directives vCapitalize -->
+  <div v-capitalize>hello world</div>
+
+  <!-- v-tooltip -->
+  <v-btn v-tooltip="'Click me!'" class="ma-10">Hover for tooltip</v-btn>
+
+  <!-- Plugin -->
+  <p v-my-directive>This text will be red</p>
+
+  <!-- Global date formatting plugin -->
+  <p>Today's date: {{ formattedDate }}</p>
 </template>
 
 <script setup>
-// import { ref } from 'vue'
+import { inject, ref, onMounted } from 'vue'
 // import TaskItem from '../components/TaskItem.vue'
 // import UserCard from '../components/UserCard.vue'
 // import RatingComponents from '@/components/RatingComponents.vue'
@@ -96,17 +123,28 @@
 // // Scoped Slots
 // import List from '../components/List.vue'
 // Render Functions
-import RenderComponent from '../components/RenderComponents.vue'
-//
-// const fruits = ['Apple', 'Banana', 'Cherry']
-//
-// const tasks = ref(['Learn Vue', 'Build an app'])
-//
-// const users = ref([
-//   { name: 'John Doe', email: 'john@example.com' },
-//   { name: 'John Doe', email: 'john@example.com' },
-// ])
-//
-// const username = ref('')
-// const productRating = ref(0)
+// import RenderComponent from '../components/RenderComponents.vue'
+
+// Composables
+import { useCounter } from '../composables/useCounter'
+const { count, increment, decrement } = useCounter(0)
+
+// LocalStorage
+import { useLocalStorage } from '../composables/useLocalStorage'
+const localStorageText = useLocalStorage('Key Word', 'Hello')
+
+// Customer Directives vCapitalize
+import { vCapitalize } from '@/directives/v-capitalize'
+
+// v-tooltip
+import { vTooltip } from '@/directives/v-tooltip'
+
+// Global date formatting plugin
+const formatDate = inject('formatDate')
+const formattedDate = ref('')
+
+onMounted(() => {
+  const today = new Date()
+  formattedDate.value = formatDate(today, 'dd  - MM - yyyy')
+})
 </script>
