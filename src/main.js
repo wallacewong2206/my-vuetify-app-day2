@@ -1,24 +1,15 @@
-/**
- * main.js
- *
- * Bootstraps Vuetify and other plugins then mounts the App`
- */
-
-// Plugins
-import { myPlugins } from './plugins/myPlugins'
-import { dateFormatterPlugin } from './plugins/formatDate'
-import { registerPlugins } from './plugins'
-
-// Components
-import App from './App.vue'
-
-// Composables
 import { createApp } from 'vue'
+import App from './App.vue'
+import router from './router' // if you have vue router
+import vuetify from './plugins/vuetify'
+import highlight from './directives/highlight.js'
+import taskPriority from './plugins/taskPriority.js'
 
 const app = createApp(App)
 
-app.use(dateFormatterPlugin)
-app.use(myPlugins, { color: 'red' })
-registerPlugins(app)
+app.use(router) // if you have vue router
+app.use(vuetify)
+app.directive('highlight', highlight)
+app.use(taskPriority)
 
 app.mount('#app')

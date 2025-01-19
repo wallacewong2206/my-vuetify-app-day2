@@ -17,6 +17,11 @@
           <v-btn color="red" @click="toggleCompletedVisibility" class="ml-2">
             {{ showCompleted ? 'Hide' : 'Show' }} Completed Tasks
           </v-btn>
+          <v-btn icon @click="toggleTheme" class="ml-2">
+            <v-icon>{{
+              isDarkTheme ? 'mdi-weather-sunny' : 'mdi-weather-night'
+            }}</v-icon>
+          </v-btn>
           <v-snackbar
             v-model="snackbar.show"
             :timeout="snackbar.timeout"
@@ -36,20 +41,12 @@
               v-for="(task, index) in filteredTasks"
               :key="index"
               class="align-center"
+              v-highlight="task.completed"
               :task="task"
               @remove="deleteTask(index)"
               @toggle="toggleTask(index)"
-            />
-          </template>
-
-          <template v-else>
-            <v-list-item>
-              <v-list-item-content>
-                <v-list-item-title>
-                  No task yet. Add one above!
-                </v-list-item-title>
-              </v-list-item-content>
-            </v-list-item>
+            >
+            </TaskItem>
           </template>
         </v-list>
       </v-col>
@@ -68,14 +65,17 @@
 </template>
 
 <script setup>
-import { ref, computed, onBeforeMount, onMounted, onUpdated } from 'vue'
+import { ref, computed, watch, onBeforeMount, onMounted, onUpdated } from 'vue'
 import CustomInput from '../components/CustomInput.vue'
 import TaskItem from '../components/TaskItem.vue'
+import { useTheme } from 'vuetify'
 
 const newTask = ref('')
 const tasks = ref([])
 const showCompleted = ref(true)
 const inputField = ref(null)
+const theme = useTheme()
+const isDarkTheme = computed(() => theme.global.name.value === 'dark')
 
 const snackbar = ref({
   show: false,
@@ -84,7 +84,11 @@ const snackbar = ref({
 })
 
 const addTask = () => {
-  tasks.value.push({ text: newTask.value, completed: false })
+  tasks.value.push({
+    text: newTask.value,
+    completed: false,
+    priority: Math.floor(Math.random() * 3) + 1,
+  })
   newTask.value = ''
   showSnackbar('A new task has been added!')
 }
@@ -112,19 +116,17 @@ const showSnackbar = (message) => {
   snackbar.value.show = true
 }
 
-const focusInput = () => {
-  inputField.value?.focus()
-}
-
-const toggleTask = (index) => {
-  tasks.value[index].completed = !tasks.value[index].completed
-}
+watch(tasks, (newTasks, oldTasks) => {
+  if (newTasks.length > oldTasks.length) {
+    showSnackbar('A new task has been added!')
+  }
+})
 
 onBeforeMount(() => {
   tasks.value = [
-    { text: 'Buy groceries', completed: false },
-    { text: 'Walk the dog', completed: true },
-    { text: 'Read a book', completed: false },
+    { text: 'Buy groceries', completed: false, priority: 1 },
+    { text: 'Walk the dog', completed: true, priority: 2 },
+    { text: 'Read a book', completed: false, priority: 3 },
   ]
 })
 
@@ -139,10 +141,21 @@ onUpdated(() => {
 const completedTask = computed(() => {
   return tasks.value.filter((task) => task.completed).length
 })
+const toggleTask = (index) => {
+  tasks.value[index].completed = !tasks.value[index].completed
+}
+
+const toggleTheme = () => {
+  theme.global.name.value =
+    theme.global.name.value === 'dark' ? 'light' : 'dark'
+}
 </script>
 
 <style scoped>
 .text-success {
   color: green;
+}
+.text-decoration-line-through {
+  text-decoration: line-through;
 }
 </style>
