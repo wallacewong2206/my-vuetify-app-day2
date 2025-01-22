@@ -17,11 +17,6 @@
           <v-btn color="red" @click="toggleCompletedVisibility" class="ml-2">
             {{ showCompleted ? 'Hide' : 'Show' }} Completed Tasks
           </v-btn>
-          <v-btn icon @click="toggleTheme" class="ml-2">
-            <v-icon>{{
-              isDarkTheme ? 'mdi-weather-sunny' : 'mdi-weather-night'
-            }}</v-icon>
-          </v-btn>
           <v-snackbar
             v-model="snackbar.show"
             :timeout="snackbar.timeout"
@@ -36,28 +31,41 @@
     <v-row justify="start" class="w-100">
       <v-col cols="12" md="12" lg="12" class="pl-0 ml-0">
         <v-list two-line>
-          <template v-if="tasks.length">
+          <template v-if="todos.length">
             <TaskItem
-              v-for="(task, index) in filteredTasks"
+              v-for="(todo, index) in filteredTodos"
               :key="index"
               class="align-center"
-              v-highlight="task.completed"
-              :task="task"
-              @remove="deleteTask(index)"
-              @toggle="toggleTask(index)"
+              v-highlight="todo.completed"
             >
+              <v-row align="center" justify="space-between">
+                <v-checkbox
+                  v-model="todo.completed"
+                  hide-details
+                  class="ml-1"
+                  color="success"
+                />
+                <v-list-item-content>
+                  <v-list-item-title>
+                    {{ todo.text }}
+                  </v-list-item-title>
+                </v-list-item-content>
+                <v-btn icon @click="deleteTodo(index)">
+                  <v-icon color="red">mdi-delete</v-icon>
+                </v-btn>
+              </v-row>
             </TaskItem>
           </template>
         </v-list>
       </v-col>
     </v-row>
 
-    <v-row justify="start" v-if="tasks.length">
+    <v-row justify="start" v-if="todos.length">
       <v-col cols="12" md="12" lg="12" class="text-center">
         <v-divider class="my-3" />
         <p>
-          Completed Tasks: <strong>{{ completedTask }}</strong
-          >/ {{ tasks.length }}
+          Completed Tasks: <strong>{{ completedTodosCount }}</strong
+          >/ {{ todos.length }}
         </p>
       </v-col>
     </v-row>
@@ -66,35 +74,32 @@
 
 <script setup>
 import { ref, computed, watch, onBeforeMount, onMounted, onUpdated } from 'vue'
+import { useTodoStore } from '../stores/TodoStore'
 import CustomInput from '../components/CustomInput.vue'
 import TaskItem from '../components/TaskItem.vue'
-import { useTheme } from 'vuetify'
+import highlight from '../directives/highlight.js'
+import taskPriority from '../plugins/taskPriority.js'
 
 const newTask = ref('')
-const tasks = ref([])
 const showCompleted = ref(true)
 const inputField = ref(null)
-const theme = useTheme()
-const isDarkTheme = computed(() => theme.global.name.value === 'dark')
-
 const snackbar = ref({
   show: false,
   message: '',
   timeout: 5000,
 })
 
+const todoStore = useTodoStore()
+const { todos, completedTodosCount, addTodo } = todoStore
+
 const addTask = () => {
-  tasks.value.push({
-    text: newTask.value,
-    completed: false,
-    priority: Math.floor(Math.random() * 3) + 1,
-  })
+  addTodo(newTask.value)
   newTask.value = ''
   showSnackbar('A new task has been added!')
 }
 
-const deleteTask = (index) => {
-  tasks.value.splice(index, 1)
+const deleteTodo = (index) => {
+  todos.splice(index, 1)
   showSnackbar('A task has been deleted!')
 }
 
@@ -105,10 +110,8 @@ const toggleCompletedVisibility = () => {
   )
 }
 
-const filteredTasks = computed(() => {
-  return showCompleted.value
-    ? tasks.value
-    : tasks.value.filter((task) => !task.completed)
+const filteredTodos = computed(() => {
+  return showCompleted.value ? todos : todos.filter((todo) => !todo.completed)
 })
 
 const showSnackbar = (message) => {
@@ -116,14 +119,14 @@ const showSnackbar = (message) => {
   snackbar.value.show = true
 }
 
-watch(tasks, (newTasks, oldTasks) => {
-  if (newTasks.length > oldTasks.length) {
+watch(todos, (newTodos, oldTodos) => {
+  if (newTodos.length > oldTodos.length) {
     showSnackbar('A new task has been added!')
   }
 })
 
 onBeforeMount(() => {
-  tasks.value = [
+  todoStore.todos = [
     { text: 'Buy groceries', completed: false, priority: 1 },
     { text: 'Walk the dog', completed: true, priority: 2 },
     { text: 'Read a book', completed: false, priority: 3 },
@@ -137,18 +140,6 @@ onMounted(() => {
 onUpdated(() => {
   console.log('Tasks have been updated')
 })
-
-const completedTask = computed(() => {
-  return tasks.value.filter((task) => task.completed).length
-})
-const toggleTask = (index) => {
-  tasks.value[index].completed = !tasks.value[index].completed
-}
-
-const toggleTheme = () => {
-  theme.global.name.value =
-    theme.global.name.value === 'dark' ? 'light' : 'dark'
-}
 </script>
 
 <style scoped>
